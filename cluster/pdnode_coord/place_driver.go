@@ -10,14 +10,18 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/spaolacci/murmur3"
 	"github.com/youzan/ZanRedisDB/cluster"
 	"github.com/youzan/ZanRedisDB/common"
-	"github.com/spaolacci/murmur3"
 )
 
 var (
 	ErrBalanceNodeUnavailable = errors.New("can not find a node to be balanced")
 	ErrClusterBalanceRunning  = errors.New("another balance is running, should wait")
+)
+
+const (
+	waitRaftSyncTimeout = time.Second * 5
 )
 
 type balanceOpLevel int
@@ -90,7 +94,7 @@ func IsRaftNodeJoined(nsInfo *cluster.PartitionMetaInfo, nid string) (bool, erro
 		var rsp []*common.MemberInfo
 		_, err := common.APIRequest("GET",
 			"http://"+net.JoinHostPort(nip, httpPort)+common.APIGetMembers+"/"+nsInfo.GetDesp(),
-			nil, time.Second*3, &rsp)
+			nil, waitRaftSyncTimeout, &rsp)
 		if err != nil {
 			cluster.CoordLog().Infof("failed (%v) to get members for namespace %v: %v", nip, nsInfo.GetDesp(), err)
 			lastErr = err
@@ -108,6 +112,8 @@ func IsRaftNodeJoined(nsInfo *cluster.PartitionMetaInfo, nid string) (bool, erro
 }
 
 // query the raft peers if the nid already in the raft group for the namespace and all logs synced in all peers
+// This is strict ready check, since the raft only need more than half replicas.
+// So it may not full ready even raft is ok for write.
 func IsAllISRFullReady(nsInfo *cluster.PartitionMetaInfo) (bool, error) {
 	for _, nid := range nsInfo.GetISR() {
 		ok, err := IsRaftNodeFullReady(nsInfo, nid)
@@ -128,7 +134,7 @@ func IsRaftNodeFullReady(nsInfo *cluster.PartitionMetaInfo, nid string) (bool, e
 		var rsp []*common.MemberInfo
 		_, err := common.APIRequest("GET",
 			"http://"+net.JoinHostPort(nip, httpPort)+common.APIGetMembers+"/"+nsInfo.GetDesp(),
-			nil, time.Second*3, &rsp)
+			nil, waitRaftSyncTimeout, &rsp)
 		if err != nil {
 			cluster.CoordLog().Infof("failed (%v) to get members for namespace %v: %v", nip, nsInfo.GetDesp(), err)
 			return false, err
@@ -147,7 +153,7 @@ func IsRaftNodeFullReady(nsInfo *cluster.PartitionMetaInfo, nid string) (bool, e
 		}
 		_, err = common.APIRequest("GET",
 			"http://"+net.JoinHostPort(nip, httpPort)+common.APIIsRaftSynced+"/"+nsInfo.GetDesp(),
-			nil, time.Second*5, nil)
+			nil, waitRaftSyncTimeout, nil)
 		if err != nil {
 			cluster.CoordLog().Infof("failed (%v) to check sync state for namespace %v: %v", nip, nsInfo.GetDesp(), err)
 			return false, err

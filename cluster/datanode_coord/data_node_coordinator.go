@@ -44,7 +44,7 @@ func ChangeIntervalForTest() {
 }
 
 const (
-	MaxRaftJoinRunning = 2
+	MaxRaftJoinRunning = 3
 )
 
 func GetNamespacePartitionFileName(namespace string, partition int, suffix string) string {
