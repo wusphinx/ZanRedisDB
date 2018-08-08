@@ -31,6 +31,9 @@
 |decr|√|
 |decrby|√|
 |setnx|√|
+|setbit|√,最大仅支持1048576位|
+|getbit|√|
+|bitcount|√|
 
 #### Hash数据类型
 
