@@ -123,52 +123,14 @@ func DeepCopyCmd(cmd redcon.Command) redcon.Command {
 }
 
 func IsMergeScanCommand(cmd string) bool {
-	switch len(cmd) {
-	case 4:
-		if (cmd[0] == 's' || cmd[0] == 'S') &&
-			(cmd[1] == 'c' || cmd[1] == 'C') &&
-			(cmd[2] == 'a' || cmd[2] == 'A') &&
-			(cmd[3] == 'n' || cmd[3] == 'N') {
-			return true
-		}
-	case 7:
-		if (cmd[0] == 'a' || cmd[0] == 'A') &&
-			(cmd[1] == 'd' || cmd[1] == 'D') &&
-			(cmd[2] == 'v' || cmd[2] == 'V') &&
-			(cmd[3] == 's' || cmd[3] == 'S') &&
-			(cmd[4] == 'c' || cmd[4] == 'C') &&
-			(cmd[5] == 'a' || cmd[5] == 'A') &&
-			(cmd[6] == 'n' || cmd[6] == 'N') {
-			return true
-		}
-	case 8:
-		if (cmd[0] == 'f' || cmd[0] == 'F') &&
-			(cmd[1] == 'u' || cmd[1] == 'U') &&
-			(cmd[2] == 'l' || cmd[2] == 'L') &&
-			(cmd[3] == 'l' || cmd[3] == 'L') &&
-			(cmd[4] == 's' || cmd[4] == 'S') &&
-			(cmd[5] == 'c' || cmd[5] == 'C') &&
-			(cmd[6] == 'a' || cmd[6] == 'A') &&
-			(cmd[7] == 'n' || cmd[7] == 'N') {
-			return true
-		}
+	if strings.EqualFold(cmd, "scan") || strings.EqualFold(cmd, "advscan") || strings.EqualFold(cmd, "fullscan") {
+		return true
 	}
-
 	return false
 }
 
 func IsFullScanCommand(cmd string) bool {
-	if (cmd[0] == 'f' || cmd[0] == 'F') &&
-		(cmd[1] == 'u' || cmd[1] == 'U') &&
-		(cmd[2] == 'l' || cmd[2] == 'L') &&
-		(cmd[3] == 'l' || cmd[3] == 'L') &&
-		(cmd[4] == 's' || cmd[4] == 'S') &&
-		(cmd[5] == 'c' || cmd[5] == 'C') &&
-		(cmd[6] == 'a' || cmd[6] == 'A') &&
-		(cmd[7] == 'n' || cmd[7] == 'N') {
-		return true
-	}
-	return false
+	return strings.EqualFold(cmd, "fullscan")
 }
 
 func IsMergeIndexSearchCommand(cmd string) bool {
